@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
 		"module": "commonjs",
+		"importsNotUsedAsValues": "error",
 		"target": "es6",
 		"checkJs": true,  /* Typecheck .js files. */
 		"lib": [

@@ -10,8 +10,6 @@
 	},
 	"version": "0.5.0",
 	"enabledApiProposals": [
-		"tabs",
-		"quickPickSeparators"
 	],
 	"engines": {
 		"vscode": "^1.50.0"
@@ -21,6 +19,7 @@
 	],
 	"activationEvents": [
 		"*",
+		"onStartupFinished",
 		"onView:package-dependencies",
 		"onCommand:folder-operations.getFoldersInWorkspace",
 		"onCommand:folder-operations.selectLines",
@@ -48,31 +47,36 @@
 			}
 		],
 		"viewsContainers": {
-      "activitybar": [
-        {
-          "id": "package-explorer",
-          "title": "Package Explorer",
-          "icon": "$(heart)"
-        }
-      ]
-    },
-    "views": {
-      "package-explorer": [
-        {
-          "id": "package-dependencies",
-          "name": "Dependencies",
+			"activitybar": [
+				{
+					"id": "package-explorer",
+					"title": "Package Explorer",
+					"icon": "$(heart)"
+				}
+			]
+		},
+		"views": {
+			"package-explorer": [
+				{
+					"id": "package-dependencies",
+					"name": "Dependencies",
 					"type": "tree"
-        },
-        {
-          "id": "package-outline",
-          "name": "Outline"
-        }
-      ]
-    },
+				},
+				{
+					"id": "package-outline",
+					"name": "Outline"
+				}
+			]
+		},
 		"menus": {
 			"explorer/context": [
 				{
-					"when": "resourcePath =~ /^((?!\/(foo|bar)).)*$/",
+					"when": "resourcePath =~ /^((?!/(foo|bar)).)*$/",
+					"command": "folder-operations.createFile"
+				}
+			],
+			"scm/resourceState/context": [
+				{
 					"command": "folder-operations.createFile"
 				}
 			]
@@ -90,6 +94,7 @@
 		"test": "node ./test/runTest.js"
 	},
 	"devDependencies": {
+		"@types/git": "^0.0.18",
 		"@types/glob": "^7.1.1",
 		"@types/mocha": "^7.0.2",
 		"@types/node": "^13.11.0",
@@ -97,6 +102,7 @@
 		"eslint": "^6.8.0",
 		"glob": "^7.1.6",
 		"mocha": "^7.1.2",
+		"open": "^8.4.0",
 		"typescript": "^3.8.3",
 		"vscode-test": "^1.3.0"
 	}
