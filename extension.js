@@ -30,7 +30,7 @@ async function activate(context) {
 		label: "Test2 Label",
 		description: "Test2 Description",
 		detail: "$(files) Test2 Detail with icon",
-	}];  
+	}];    
 	await q.show();
 
 	console.log("here");
