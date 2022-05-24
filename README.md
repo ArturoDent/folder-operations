@@ -5,6 +5,10 @@ This extension demonstrates how to use a command contributed by an extension to 
 
 ## Features
 
+|    Table     |    Header     |  
+|--------------|---------------|  
+|  first cell  |  second cell  |  
+|  third cell  |  fourth cell  |
 
 
 \!\[Demo of task listing files in a selected folder from all folders in a workspace\]\(images\commandPickTest.gif\)

@@ -40,3 +40,5 @@ function run() {
 module.exports = {
 	run
 };
+
+// async function main() {

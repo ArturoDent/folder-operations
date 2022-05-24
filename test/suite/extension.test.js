@@ -5,6 +5,8 @@ const assert = require('assert');
 const vscode = require('vscode');
 // const myExtension = require('../extension');
 
+vscode = 12;
+
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 

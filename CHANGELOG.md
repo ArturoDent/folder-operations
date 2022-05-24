@@ -1,9 +1,5 @@
-# Change Log
+<input type="checkbox" checked> some checked text  
+<input type="checkbox"> some unchecked text  
 
-All notable changes to the "folder-operations" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+[Run It](command:folder-operations.createFile)
