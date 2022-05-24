@@ -1,0 +1,19 @@
+{
+	"Custom Header2": {
+	"prefix": "reactpure",
+	"body": [
+		"import React from 'react';",
+		"import PropTypes from 'prop-types';",
+		"import './${1:ComponentName}.module.css';",
+		"const ${1:ComponentName} = ({ ${2:propValue=[] } }) => (",
+		"<${3:rootelement}>${4:content}</${3:rootelement}>",
+		")",
+		"${1:ComponentName}.propTypes = {",
+		"${5:propValue}: PropTypes.string",
+		"};",
+		"export default ${1:ComponentName};",
+		"$0"
+	],
+	"description": "Create a react pure component"
+	}
+}

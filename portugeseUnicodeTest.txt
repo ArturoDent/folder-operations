@@ -1,0 +1,9 @@
+Português Brasileiro
+
+Configurar o Idioma de Exibição
+
+ será exibida uma lista
+
+ Языковой пакет для русского языка для VS Code
+
+ Module linguistique français pour VS Code

@@ -1,0 +1,56 @@
+"menus": {
+  "explorer/context": [
+    {
+      "when": "resourceFilename in ext.list || !explorerResourceIsFolder && resourceDirname =~ /(\\/|\\\\)(bundle|concat)$/",
+      "command": "folder-operations.createFile"
+    }
+  ]
+},
+
+Portuguêsimport React from 'react';
+import PropTypes from 'prop-types';
+import './ComponentName.module.css';
+const ComponentName = ({ propValue=[]  }) => (
+<rootelement>content</rootelement>
+)
+ComponentName.propTypes = {
+propValue: PropTypes.string
+};
+export default ComponentName;
+
+‟ asdasd ” 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"menus": {
+  "explorer/context": [
+    {
+      "when": "explorerResourceIsFolder && resourcePath =~ /.*?(?<!(\\\\|\\\/)(bundle|concat))$/ || !explorerResourceIsFolder && resourceDirname =~ /.*?(?<!(\\\\|\\\/)(bundle|concat))$/",
+      "command": "folder-operations.createFile"
+    }
+  ]
+},
+
+ه  ا    ê   Contribuições  
