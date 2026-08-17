@@ -14,31 +14,315 @@ const openDefault = require("open");
  */
 async function activate(context) {
 
-	const q = vscode.window.createQuickPick();
-	q.items =   [{
-			label: "Test1 Label",
-			description: "Test1 Description",
-			detail: "$(files) Test1 Detail with icon",
-		},
-		{
-			label: "Test2 Label",
-			description: "Test2 Description",
-			detail: "$(files) Test2 Detail with icon",
+	const document = vscode.window.activeTextEditor?.document;
+	// const someDoc = vscode.window.visibleTextEditors[0].document;
+
+  const tabGroups = vscode.window.tabGroups;
+  
+  console.log(tabGroups);
+
+	// var disposable = vscode.commands.registerCommand('save-without-format.save', async function () {
+
+	// 	var config = vscode.workspace.getConfiguration();
+	// 	var fos = await config.get('editor.formatOnSave');
+
+	// 	await config.update('editor.formatOnSave', false).then(function () {
+
+	// 		someDoc.save().then(
+	// 			(function () {
+	// 				config.update('editor.formatOnSave', fos).then(function () {});
+	// 			})
+	// 		);
+	// 	});
+	// });
+
+	var disposable = vscode.commands.registerCommand('save-without-format.save', async function () {
+
+		const someDoc = vscode.workspace.textDocuments.find((doc) => {
+			if (doc.fileName)
+				return doc.fileName === "c:\\Users\\markm\\OneDrive\\Test Bed\\testLaunch.js";
+			else return false;
+		});  // not the activeTextEditor
+
+		// const inspected = vscode.workspace.getConfiguration('editor', someDoc).inspect('formatOnSave');
+		// const enableds = Object.entries(inspected).filter(entry => {
+		// 	return entry[1] && (entry[1] !== 'editor.formatOnSave');
+		// });   // if true
+
+		// let enableds = [];
+		// for await (const entry of Object.entries(inspected)) {
+		// 	if (entry[1] && (entry[1] !== 'editor.formatOnSave')) enableds.push(entry[0]);
+		// }
+
+		// inspected.languageIds = ["javascript", "typescript"];   // example
+
+		// const wsFolder = vscode.workspace.getWorkspaceFolder(someDoc.uri);
+
+		// all are true if user settings is true and all others undefined
+		const resolvedValue = vscode.workspace.getConfiguration('editor', document).get('formatOnSave');
+		// const configAtStart2 = vscode.workspace.getConfiguration('editor', document.uri).get('formatOnSave');
+
+		// below is true if one of the LanguageValues is true (in priority)
+		// false if one in priority is false or all are undefined
+		// below needed where setting is true/false, but language-specific setting is false/true
+		// const configAtStart3 = vscode.workspace.getConfiguration('editor', {uri: document.uri, languageId: someDoc.languageId}).get('formatOnSave');
+
+		// don't use below
+		// const configAtStart4 = vscode.workspace.getConfiguration('editor', {languageId: someDoc.languageId}).get('formatOnSave');
+
+		// const configAtStart5 = vscode.workspace.getConfiguration('editor', wsFolder).get('formatOnSave');
+
+		if (!resolvedValue) {  // already resolved to false
+			someDoc.save();
+			return;
 		}
-	]
-	q.activeItems = [		{
+
+		// else resolvedValue === true
+		let workspaceFolderSettingsExists = false;
+		let originalState = undefined;
+
+		try {
+			const wsFolder = vscode.workspace.getWorkspaceFolder(someDoc.uri);
+			const workspaceSettingsUri = vscode.Uri.joinPath(wsFolder.uri, '.vscode', 'settings.json');
+			await vscode.workspace.fs.stat(workspaceSettingsUri);
+			workspaceFolderSettingsExists = true;
+		}
+		catch (e) {
+			// console.log(e);  // e.code === 'FileNotFound'  // ignore this error
+		}
+
+		// if (typeof inspected.workspaceFolderLanguageValue === 'boolean') {
+		// 	originalState = inspected.workspaceFolderLanguageValue;
+		// 	await vscode.workspace.getConfiguration('editor', {uri: document.uri, languageId: someDoc.languageId}).update('formatOnSave', false, 3, true);
+		// }
+		// else if (typeof inspected.workspaceLanguageValue === 'boolean') {
+		// 	originalState = inspected.workspaceLanguageValue;
+		// 	await vscode.workspace.getConfiguration('editor', {uri: document.uri, languageId: someDoc.languageId}).update('formatOnSave', false, 2, true);
+		// }
+		// else if (typeof inspected.globalLanguageValue === 'boolean') {  // use User Settings language-specific value
+		// 	originalState = inspected.globalLanguageValue;
+		// 	await vscode.workspace.getConfiguration('editor', {uri: document.uri, languageId: someDoc.languageId}).update('formatOnSave', false, 1, true);
+		// }
+		// else if (workspaceFolderSettingsExists) {
+		// 	originalState = inspected.workspaceFolderValue;
+		// 	await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', false, 3);
+		// }
+		// else if (vscode.workspace.workspaceFile) {
+		// 	originalState = inspected.workspaceValue;
+		// 	await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', false, 2);
+		// }
+		// else {
+		// 	originalState = inspected.globalValue;
+		// 	await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', false, 1);
+		// }
+		// defaultValue for editor.formatOnSave  === false, so don't need to handle this case
+
+		// const config = vscode.workspace.getConfiguration('editor', someDoc).get('formatOnSave');
+
+		const inspected = vscode.workspace.getConfiguration('editor', someDoc).inspect('formatOnSave');
+
+		originalState = await updateSetting("editor.formatOnSave", someDoc, false);
+
+		await someDoc.save();
+
+		await updateSetting("editor.formatOnSave", document, originalState); // the return ignored here
+
+
+		// if (typeof inspected.workspaceFolderLanguageValue === 'boolean') {
+		// 	originalState = inspected.workspaceFolderLanguageValue;
+		// 	await vscode.workspace.getConfiguration('editor', {uri: document.uri, languageId: someDoc.languageId}).update('formatOnSave', originalState, 3, true);
+		// }
+		// else if (typeof inspected.workspaceLanguageValue === 'boolean') {
+		// 	originalState = inspected.workspaceLanguageValue;
+		// 	await vscode.workspace.getConfiguration('editor', {uri: document.uri, languageId: someDoc.languageId}).update('formatOnSave', originalState, 2, true);
+		// }
+		// else if (typeof inspected.globalLanguageValue === 'boolean') {  // use User Settings language-specific value
+		// 	originalState = inspected.globalLanguageValue;
+		// 	await vscode.workspace.getConfiguration('editor', {uri: document.uri, languageId: someDoc.languageId}).update('formatOnSave', originalState, 1, true);
+		// }
+		// else if (workspaceFolderSettingsExists) {
+		// 	originalState = inspected.workspaceFolderValue;
+		// 	await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', originalState, 3);
+		// }
+		// else if (vscode.workspace.workspaceFile) {
+		// 	originalState = inspected.workspaceValue;
+		// 	await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', originalState, 2);
+		// }
+		// else {
+		// 	originalState = inspected.globalValue;
+		// 	await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', originalState, 1);
+		// }
+		// // defaultValue ?
+
+		console.log();
+
+		/**
+		 * 
+		 * @param {string} setting 
+		 * @param {vscode.TextDocument} document 
+		 * @param {boolean|string} toState false or the original state: true/false/undefined
+		 * @returns {Promise<string|null>} originalState
+		 */
+		async function updateSetting(setting, document, toState) {
+
+			const splitSetting = setting.split('.');
+
+			if (typeof inspected.workspaceFolderLanguageValue === 'boolean') {  // so undefined is ignored
+				originalState = inspected.workspaceFolderLanguageValue;
+				await vscode.workspace.getConfiguration(splitSetting[0], {uri: document.uri, languageId: someDoc.languageId}).update(splitSetting[1], toState, 3, true);
+			}
+			else if (typeof inspected.workspaceLanguageValue === 'boolean') {
+				originalState = inspected.workspaceLanguageValue;
+				await vscode.workspace.getConfiguration(splitSetting[0], {uri: document.uri, languageId: someDoc.languageId}).update(splitSetting[1], toState, 2, true);
+			}
+			else if (typeof inspected.globalLanguageValue === 'boolean') {
+				originalState = inspected.globalLanguageValue;
+				await vscode.workspace.getConfiguration(splitSetting[0], {uri: document.uri, languageId: someDoc.languageId}).update(splitSetting[1], toState, 1, true);
+			}
+			else if (workspaceFolderSettingsExists) {
+				originalState = inspected.workspaceFolderValue;
+				await vscode.workspace.getConfiguration(splitSetting[0], someDoc).update(splitSetting[1], toState, 3);
+			}
+			else if (vscode.workspace.workspaceFile) {
+				originalState = inspected.workspaceValue;
+				await vscode.workspace.getConfiguration(splitSetting[0], someDoc).update(splitSetting[1], toState, 2);
+			}
+			else {
+				originalState = inspected.globalValue;
+				await vscode.workspace.getConfiguration(splitSetting[0], someDoc).update(splitSetting[1], toState, 1);
+			}
+			return originalState;
+		}
+
+		// .vscode/settings.json === some workspaceFolder
+
+		// 	for await (const entry of enableds) {                      // make a switch/case
+		// 		if (entry === 'globalValue') {  // globalRemoteValue
+		// 			await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', true, 1, undefined);
+		// 			await vscode.workspace.getConfiguration('editor').update('formatOnSave', true, 1);
+		// 		}
+		// 		else if (entry === 'workspaceValue') {
+		// 			await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', true, 2, undefined);
+		// 		}
+		// 		else if (entry === 'workspaceFolderValue') {
+		// 			await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', true, 3, undefined);
+		// 		}
+		// 		// else if (entry.includes('LanguageValue')) {  // globalRemoteLanguageValue
+		// 		// 	await vscode.workspace.getConfiguration('editor', {languageId: someDoc.languageId}).update('formatOnSave', true, 1, undefined);
+		// 		// }
+
+		// 		// else if (entry === 'globalLanguageValue') {  // globalRemoteLanguageValue
+		// 		// 	// await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', true, 1, true);
+		// 		// 	await vscode.workspace.getConfiguration('editor', {languageId: someDoc.languageId}).update('formatOnSave', true, 1, true);
+		// 		// }
+		// 		// else if (entry === 'globalLocalLanguageValue') {
+		// 		// 	// await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', true, 1, true);
+		// 		// 	await vscode.workspace.getConfiguration('editor', {languageId: someDoc.languageId}).update('formatOnSave', true, 1, true);
+		// 		// }
+		// 		// else if (entry === 'workspaceLanguageValue') {
+		// 		// 	// await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', true, 2, true);
+		// 		// 	await vscode.workspace.getConfiguration('editor', {languageId: someDoc.languageId}).update('formatOnSave', true, 2, true);
+		// 		// }
+		// 		// 	// "Unable to write to Folder Settings because no resource is provided.""
+		// 		// else if (entry === 'workspaceFolderLanguageValue') {
+		// 		// 	// await vscode.workspace.getConfiguration('editor', someDoc).update('formatOnSave', true, 3, true);
+		// 		// 	await vscode.workspace.getConfiguration('editor', {languageId: someDoc.languageId}).update('formatOnSave', true, undefined, true);
+		// 		// }
+		// 	}
+	});
+
+	// orientation: 1,
+	// 	groups:
+	// [
+	// 	{
+	// 		size: 366,
+	// 	},
+	// 	{
+	// 		size: 366,
+	// 		groups: [
+	// 			{
+	// 				size: 611,
+	// 			},
+	// 			{
+	// 				size: 611,
+	// 			},
+	// 		],
+	// 	},
+	// ]
+
+	context.subscriptions.push(disposable);
+
+	const editorLayout = await vscode.commands.executeCommand('vscode.getEditorLayout');
+  // const tabGroups = vscode.window.tabGroups;
+  
+  // console.log(tabGroups);
+
+	// const wordWrap = vscode.workspace.getConfiguration().get('editor.wordWrap');
+	// const inspected = vscode.workspace.getConfiguration("editor", document).get("wordWrap");
+	// const inspected2 = vscode.workspace.getConfiguration().inspect("editor.wordWrap");
+
+	// vscode.workspace.onDidChangeConfiguration((event) => {
+	// 	if (event.affectsConfiguration("editor.wordWrap", document)) {
+	// 		//  it changed
+	// 		console.log(event);
+	// 	}
+	// 	if (event.affectsConfiguration("editor.wordWrap")) {
+	// 		//  it changed
+	// 		console.log(event);
+	// 	}
+	// });
+
+	// const document = vscode.window.activeTextEditor.document;
+	// const lineNum = document.lineCount - 1;
+
+	const items = [{
+		label: "Test1 Label $(eye)",
+		description: "Test1 Description",
+		detail: "$(files) Test1 Detail with icon",
+	},
+	{
+		label: "$(eye)",
+		kind: vscode.QuickPickItemKind.Separator
+	},
+
+	{
 		label: "Test2 Label",
 		description: "Test2 Description",
 		detail: "$(files) Test2 Detail with icon",
-	}];  
-	await q.show();
+	}
+	];
+
+	// const q = vscode.window.createQuickPick();
+	const q = await vscode.window.showQuickPick(items);
+	// items =   [{
+	// 	label: "Test1 Label $(eye)",
+	// 		description: "Test1 Description",
+	// 		detail: "$(files) Test1 Detail with icon",
+	// },
+	// 	{
+	// 		label: "$(eye)",
+	// 		kind: vscode.QuickPickItemKind.Separator
+	// 	},
+
+	// 	{
+	// 		label: "Test2 Label",
+	// 		description: "Test2 Description",
+	// 		detail: "$(files) Test2 Detail with icon",
+	// 	}
+	// ]
+	// q.activeItems = [		{
+	// 	label: "Test2 Label",
+	// 	description: "Test2 Description",
+	// 	detail: "$(files) Test2 Detail with icon",
+	// }];  
+	// await q.show();
 
 	console.log("here");
 
 	// const filePath = vscode.window.activeTextEditor.document.fileName;
 	// await openDefault(filePath);
 	// console.log("closed");
-	
+
 	// const gitExtension = vscode.extensions.getExtension('vscode.git').exports;
 	// const git = gitExtension.getAPI(1);
 	// console.log(git);
@@ -60,17 +344,6 @@ async function activate(context) {
 	// 		console.log('CUSTOM EVENT', e.session.id, e.event);
 	// })
 
-	const savecommand = 'folder-operations.key-binding';
-
-	const saveComamndHandler = vscode.commands.registerCommand(savecommand, () => {
-
-			vscode.window.showInformationMessage("Saved file");
-
-	});
-
-	context.subscriptions.push(saveComamndHandler);
-
-}
 
 	// this gets the typescript-basics extension, not what we want
 	// const tsExtension = await vscode.extensions.getExtension('vscode.typescript');
@@ -101,12 +374,12 @@ async function activate(context) {
 	// const workbenchConfig = vscode.workspace.getConfiguration('editor');
 	// const currentFont = workbenchConfig.get('fontFamily');
 	// console.log(currentFont);
-	
+
 	// await workbenchConfig.update('fontFamily', 'Fira Code');
 
 	// console.log("here");
 
-// 	// ---------------------------------------------------------------
+	// 	// ---------------------------------------------------------------
 
 	// vscode.window.activeTextEditor.selections = [new vscode.Selection(new vscode.Position(0,0), new vscode.Position(0, 100))];
 
@@ -155,7 +428,7 @@ async function activate(context) {
 
 	// const openTerminalEditor = tabs.some(tab => tab.viewId === 'terminalEditor');
 
-// vscode.debug.onDidChangeActiveDebugSession
+	// vscode.debug.onDidChangeActiveDebugSession
 
 
 
@@ -204,10 +477,10 @@ async function activate(context) {
 
 	// let disposable4 = vscode.languages.registerHoverProvider('lisp', {
 	// 	provideHover(document, position) {
-			
-			// a markdown table, wrapping in a styled span did not work
-			// had to style each "cell" separately
-			// html entity &nbsp; works
+
+	// a markdown table, wrapping in a styled span did not work
+	// had to style each "cell" separately
+	// html entity &nbsp; works
 
 	// 		const markdown = new vscode.MarkdownString(`
 	// |    <span style="color:#ff0;background-color:#000;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Table&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>|    Header     |
@@ -215,7 +488,7 @@ async function activate(context) {
 	// |first cell    |second cell  |
 	// |third cell    |<span style="color:#f00;background-color:#fff;">&nbsp;&nbsp;fourth cell&nbsp;&nbsp;</span>  |
 	// 		\n\n\n`);  // the newline is necessary for any following appends to work correctly, multiple newlines are reduced to one
-			
+
 	// 		const styledString = `<span style="color:#fff;background-color:#666;">&nbsp;&nbsp;&nbsp;NASA code follows:&nbsp;&nbsp;&nbsp;</span>`;
 
 	// 		const codeBlock = `const a = 12;
@@ -233,82 +506,99 @@ async function activate(context) {
 	// * final note`
 	// 		);
 
-// const value = "Jello";
+	// const value = "Jello";
 
-// const content = new vscode.MarkdownString(`<span style="color:#000;background-color:#fff;">Howdy there.</span>`);
-// content.appendMarkdown(`<p> Some label: <code>${value}</code></p>`);
+	// const content = new vscode.MarkdownString(`<span style="color:#000;background-color:#fff;">Howdy there.</span>`);
+	// content.appendMarkdown(`<p> Some label: <code>${value}</code></p>`);
 
-// const commentCommandUri = vscode.Uri.parse(`command:launches.showAllLaunchConfigs`);
-// const content = new vscode.MarkdownString(`[Add comment](${commentCommandUri})`);
-// const content = new vscode.MarkdownString(`[Show All Launch Configs](${commentCommandUri})`);
+	// const commentCommandUri = vscode.Uri.parse(`command:launches.showAllLaunchConfigs`);
+	// const content = new vscode.MarkdownString(`[Add comment](${commentCommandUri})`);
+	// const content = new vscode.MarkdownString(`[Show All Launch Configs](${commentCommandUri})`);
 
-// command:pkg.command
-// content.supportHtml = true;
+	// command:pkg.command
+	// content.supportHtml = true;
 
-// content.isTrusted = true;
+	// content.isTrusted = true;
 
-// return new vscode.Hover(content, new vscode.Range(position, position));
+	// return new vscode.Hover(content, new vscode.Range(position, position));
 
-			// const contents = new vscode.MarkdownString(`[test-link](https://www.google.com)`);
+	// const contents = new vscode.MarkdownString(`[test-link](https://www.google.com)`);
 
-			// contents.appendMarkdown("<a href='https://www.google.com'>test-link2</a>");
-			// contents.supportHtml = true;
+	// contents.appendMarkdown("<a href='https://www.google.com'>test-link2</a>");
+	// contents.supportHtml = true;
 
-			// contents.isTrusted = true;
-			// return new vscode.Hover(contents);
+	// contents.isTrusted = true;
+	// return new vscode.Hover(contents);
 	// 	}
 	// });
 
 	// context.subscriptions.push(disposable4);
 
-// 	let windowOpenOptions = {
-// 		forceNewWindow: false,
-// 		preferNewWindow: false
-// 	}
+	// 	let windowOpenOptions = {
+	// 		forceNewWindow: false,
+	// 		preferNewWindow: false
+	// 	}
 
-// vscode.commands.executeCommand('_files.windowOpen', [
-// 	// { folderUri: vscode.Uri.file('C:\\Users\\Mark\\OneDrive\\Test Bed') },
-// 	{ fileUri: vscode.Uri.file('C:\\Users\\Mark\\OneDrive\\Test Bed\\test.md') }, // must be absolute path
-// 	{ fileUri: vscode.Uri.file('C:\\Users\\Mark\\OneDrive\\Test Bed\\dest6\\dist\\test1.txt') }
-// ],
-// 	windowOpenOptions
-// );
+	// vscode.commands.executeCommand('_files.windowOpen', [
+	// 	// { folderUri: vscode.Uri.file('C:\\Users\\Mark\\OneDrive\\Test Bed') },
+	// 	{ fileUri: vscode.Uri.file('C:\\Users\\Mark\\OneDrive\\Test Bed\\test.md') }, // must be absolute path
+	// 	{ fileUri: vscode.Uri.file('C:\\Users\\Mark\\OneDrive\\Test Bed\\dest6\\dist\\test1.txt') }
+	// ],
+	// 	windowOpenOptions
+	// );
 
 
-	let disposable2 = vscode.commands.registerCommand('folder-operations.createFile', async  (...file) =>  {
+	let disposable2 = vscode.commands.registerCommand('folder-operations.createFile', async (...file) => {
 
 		// const filePath = vscode.window.tabGroups.activeTabGroup.activeTab.input.uri.fsPath;
 		// await openDefault(filePath);
-		console.log(file);
+    console.log(file);
+    
 
-});
+		const document = vscode.window.activeTextEditor.document;
+		const lineNum = document.lineCount - 1;
 
-// async function createFileOpen(folder) {
+		const textLine = document.lineAt(lineNum - 2);
+		const lineRange = textLine.range;
 
-//   const we = new vscode.WorkspaceEdit();
+		const pos = lineRange.start;
+		const res = pos.compareTo(lineRange.end);
 
-//   const thisWorkspace = await vscode.workspace.workspaceFolders[0].uri.toString();
+		const rgtChrIdx = lineRange.end.character;
+		const lftChrIdx = rgtChrIdx - 4;
 
-//   // if you want it to be in some folder under the workspaceFolder: append a folder name
+		console.log();
 
-//   // const uriBase = `${thisWorkspace}/folderName`;
-//   // let newUri1 = vscode.Uri.parse(`${uriBase}/index.js`);
+	});
 
-//   // create a Uri for a file to be created
-//   // const newUri = await vscode.Uri.parse(`${ thisWorkspace }\\myTestIndex.js`);
-//   // const newUri = await vscode.Uri.parse(`${ folder }\\myTestIndex.js`, true);
-//   const newUri = await vscode.Uri.joinPath(folder, `myTestIndex.js`);
 
-//   await we.createFile(newUri, { ignoreIfExists: false, overwrite: true });  // create an edit that will create a file
 
-//   await vscode.workspace.applyEdit(we); // apply the edit: in this case file creation
+	// async function createFileOpen(folder) {
 
-//   await vscode.workspace.openTextDocument(newUri)
-//     .then(async document => {
-//       await vscode.window.showTextDocument(document);
-//     });
+	//   const we = new vscode.WorkspaceEdit();
 
-  // await vscode.commands.executeCommand('editor.action.insertSnippet', { 'name': 'My Custom Snippet Label Here'});
+	//   const thisWorkspace = await vscode.workspace.workspaceFolders[0].uri.toString();
+
+	//   // if you want it to be in some folder under the workspaceFolder: append a folder name
+
+	//   // const uriBase = `${thisWorkspace}/folderName`;
+	//   // let newUri1 = vscode.Uri.parse(`${uriBase}/index.js`);
+
+	//   // create a Uri for a file to be created
+	//   // const newUri = await vscode.Uri.parse(`${ thisWorkspace }\\myTestIndex.js`);
+	//   // const newUri = await vscode.Uri.parse(`${ folder }\\myTestIndex.js`, true);
+	//   const newUri = await vscode.Uri.joinPath(folder, `myTestIndex.js`);
+
+	//   await we.createFile(newUri, { ignoreIfExists: false, overwrite: true });  // create an edit that will create a file
+
+	//   await vscode.workspace.applyEdit(we); // apply the edit: in this case file creation
+
+	//   await vscode.workspace.openTextDocument(newUri)
+	//     .then(async document => {
+	//       await vscode.window.showTextDocument(document);
+	//     });
+
+	// await vscode.commands.executeCommand('editor.action.insertSnippet', { 'name': 'My Custom Snippet Label Here'});
 
 
 
@@ -316,12 +606,12 @@ async function activate(context) {
 	// 	'lisp',
 	// 	{
 	// 		provideCompletionItems(document, position) {
-	
+
 	// 			const linePrefix = document.lineAt(position).text.substr(0, position.character);
 	// 			if (!linePrefix.endsWith('console:')) {
 	// 				return undefined;
 	// 			}
-	
+
 	// 			// const simpleCompletion = new vscode.CompletionItem(':foo');
 	// 			const simpleCompletion = new vscode.CompletionItem(":foo");
 	// 			simpleCompletion.detail = "myDetail";
@@ -340,13 +630,13 @@ async function activate(context) {
 
 	// 			// const markdownDocumentation = new vscode.MarkdownString();
 	// 			// markdownDocumentation.supportHtml = true;
-	
+
 	// 			// 									// bad lineHeight? when using <br/> tag to insert a line break
 	// 			// markdownDocumentation.appendMarkdown("<h1>howdy1<br/>howdy1</h1>");
 	// 			// markdownDocumentation.appendMarkdown("<h1>howdy1.1</h1><br/><h1>howdy1.1</h1>");
 
 	// 			// markdownDocumentation.appendMarkdown("<h2>howdy2<br/>howdy2</h2>");
-	
+
 	// 			// 									// good lineHeight when using a <p> tag to separate blocks of html
 	// 			// markdownDocumentation.appendMarkdown("<p><h1>howdy3</h1></p><p><h1>howdy3</h1></p>");
 	// 			// markdownDocumentation.appendMarkdown("<p><h2>howdy4</h2></p><p><h2>howdy4</h2></p>");
@@ -355,14 +645,14 @@ async function activate(context) {
 
 
 	// 			// <span style='color:#000;background-color:#fff;'>
-	
+
 	// 			// simpleCompletion.documentation = markdownDocumentation;
 	// 			simpleCompletion.documentation = content;
-				
+
 	// 			// const word = vscode.window.activeTextEditor.document.getWordRangeAtPosition(position);
-				
+
 	// 			simpleCompletion.range = new vscode.Range(position.line, position.character-1, position.line, position.character);
-				
+
 	// 			return [simpleCompletion];
 	// 		}
 	// 	},
@@ -370,21 +660,21 @@ async function activate(context) {
 	// });
 
 	// context.subscriptions.push(provider2);
-// }
+	// }
 
 
 
-// exports.activate = activate;
+	// exports.activate = activate;
 
-// this method is called when your extension is deactivated
-// function deactivate() {}
+	// this method is called when your extension is deactivated
+	// function deactivate() {}
+}
 
-
-async function deactivate()  {
-	return await vscode.workspace.getConfiguration("folder-operations").update("operation",undefined, true);
+async function deactivate() {
+	return await vscode.workspace.getConfiguration("folder-operations").update("operation", undefined, true);
 }
 
 module.exports = {
 	activate,
 	deactivate
-}
+};

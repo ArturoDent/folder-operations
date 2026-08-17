@@ -9,8 +9,7 @@
 		"url": "https://github.com/ArturoDent/folder-operations"
 	},
 	"version": "0.5.0",
-	"enabledApiProposals": [
-	],
+	"enabledApiProposals": [],
 	"engines": {
 		"vscode": "^1.50.0"
 	},
@@ -29,6 +28,10 @@
 	"main": "./extension.js",
 	"contributes": {
 		"commands": [
+			{
+				"command": "save-without-format.save",
+				"title": "MyExt: Save document without formatting"
+			},
 			{
 				"command": "folder-operations.copyProblems",
 				"title": "Copy all problems messages"
@@ -55,26 +58,7 @@
 				}
 			]
 		},
-		"views": {
-			"package-explorer": [
-				{
-					"id": "package-dependencies",
-					"name": "Dependencies",
-					"type": "tree"
-				},
-				{
-					"id": "package-outline",
-					"name": "Outline"
-				}
-			]
-		},
 		"menus": {
-			"explorer/context": [
-				{
-					"when": "resourcePath =~ /^((?!/(foo|bar)).)*$/",
-					"command": "folder-operations.createFile"
-				}
-			],
 			"scm/resourceState/context": [
 				{
 					"command": "folder-operations.createFile"
